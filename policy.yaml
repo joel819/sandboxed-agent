@@ -1,0 +1,27 @@
+# OpenShell sandbox policy for sandboxed-agent.
+# Fields verified against: https://docs.nvidia.com/openshell/how-it-works/policies/schema
+# Paths point at what tools.py/setup_data.py actually read/write (chroma_db/, orders.db) -
+# not renamed to fit a folder layout the code doesn't use.
+
+version: 1
+
+filesystem_policy:
+  include_workdir: false
+  read_only: [/usr, /lib, /lib64, /etc, /app, /app/chroma_db, /app/orders.db]
+  read_write: [/tmp]
+
+# process identity omitted on purpose: the Dockerfile already switches to a
+# non-root `sandbox` user via USER, and the schema's run_as_user/run_as_group
+# meaning wasn't confirmed precisely enough in the docs to hand-write without guessing.
+
+network_policies:
+  groq_api:
+    name: groq-chat-completions
+    endpoints:
+      - host: api.groq.com
+        port: 443
+        protocol: rest
+        enforcement: audit   # start in audit mode - flip to enforce once the log confirms POST is allowed through `full`
+        access: full
+    binaries:
+      - { path: /usr/local/bin/python3 }

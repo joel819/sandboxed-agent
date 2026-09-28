@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+orders.db
+chroma_db/
+.env
