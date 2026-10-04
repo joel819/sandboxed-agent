@@ -1,6 +1,6 @@
 # sandboxed-agent
 
-**Proves:** the same [support-agent](../harness) (RAG + SQLite tool calling) can be dropped into an [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell) sandbox and, without changing a line of its code, be provably restricted to only the files and network destinations a policy file names — everything else, including credential theft and data exfiltration attempts, gets blocked at the OS level and logged.
+**Proves:** the same [support-agent](https://github.com/joel819/support-agent) (RAG + SQLite tool calling) can be dropped into an [NVIDIA OpenShell](https://github.com/NVIDIA/OpenShell) sandbox and, without changing a line of its code, be provably restricted to only the files and network destinations a policy file names — everything else, including credential theft and data exfiltration attempts, gets blocked at the OS level and logged.
 
 This is a demo built on free tiers (Ollama/Groq free inference, OpenShell OSS). It is **not** running on NVIDIA Sentry or BlueField hardware — OpenShell software sandboxing only.
 
@@ -9,7 +9,18 @@ This is a demo built on free tiers (Ollama/Groq free inference, OpenShell OSS). 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh
 export GROQ_API_KEY=your_key_here   # optional - omit to run scenario 1 with a canned response
+# export GROQ_MODEL=...             # optional - defaults to openai/gpt-oss-120b (Groq retires models over time)
 ./demo.sh
+```
+
+## What the agent prints
+
+Scenario 1 with a Groq key. This run is the same `run_agent.py` call, executed on a normal machine (not inside OpenShell). The `[step]` line goes to stderr and shows the real tool call and result:
+
+```text
+$ python3 run_agent.py "where is order A101?"
+  [step 1] get_order({'order_id': 'A101'}) -> order A101: status=processing, item=GPU node - 1x A6000, total=$300.00
+Order A101 is currently processing. It includes a GPU node - 1 x A6000 and the total amount is $300.00.
 ```
 
 ## The policy, in plain English
@@ -39,6 +50,10 @@ Each scenario prints what was attempted, the allow/deny verdict, and the actual 
 - `groq_adapter.py` — a new file giving `agent.call_model()` a Groq-shaped twin (Groq's API is OpenAI-compatible; Ollama's local API isn't reachable from inside the sandbox's network namespace, and isn't on the policy's allow-list anyway).
 - `run_agent.py` — the demo entrypoint. Monkey-patches `agent.call_model` to the Groq adapter when `GROQ_API_KEY` is set; otherwise replays a canned trace so the demo still runs with zero setup.
 - `Dockerfile` — dependencies (`chromadb`, `requests`) are installed at image build time, with normal unrestricted network access. OpenShell's policy only governs the *running* sandbox — there's no PyPI in the allow-list, so runtime `pip install` would fail by design.
+
+## Tests
+
+`pip install pytest requests && pytest tests` checks the history translation in `groq_adapter.py` offline (no key, no network, no OpenShell).
 
 ## Sources
 

@@ -19,10 +19,8 @@ echo "=== creating sandbox under policy.yaml ==="
 openshell sandbox create --name "$SANDBOX" --from "$IMAGE" --policy policy.yaml --no-auto-providers \
   || { echo "sandbox create failed - is the OpenShell gateway running? (openshell gateway status)"; exit 1; }
 
-if [ -n "${GROQ_API_KEY:-}" ]; then
-  echo "=== passing GROQ_API_KEY into the sandbox ==="
-  openshell sandbox exec --name "$SANDBOX" -- env GROQ_API_KEY="$GROQ_API_KEY" true
-fi
+# Each `sandbox exec` is a separate process, so an env var set in one call does not carry over to the
+# next. The key is therefore passed on the scenario 1 command itself (empty = canned mode).
 
 print_result () {
   local label="$1" verdict="$2"
@@ -35,7 +33,7 @@ echo "############################################"
 echo "# Scenario 1: normal question (should succeed)"
 echo "############################################"
 echo "Attempting: run_agent.py \"where is order A101?\""
-if openshell sandbox exec --name "$SANDBOX" -- python3 run_agent.py "where is order A101?"; then
+if openshell sandbox exec --name "$SANDBOX" -- env GROQ_API_KEY="${GROQ_API_KEY:-}" GROQ_MODEL="${GROQ_MODEL:-openai/gpt-oss-120b}" python3 run_agent.py "where is order A101?"; then
   print_result "Scenario 1" "ALLOWED"
 else
   print_result "Scenario 1" "UNEXPECTED FAILURE"
