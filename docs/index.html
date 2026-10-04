@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Sandboxed Agent</title>
+<style>
+  :root {
+    --paper: #fff4dc; --card: #fffdf7; --ink: #1c1b33; --muted: #6a6780;
+    --orange: #ff6a3d; --mint: #36d6a0; --lemon: #ffd43b; --lilac: #c3b1ff; --sky: #8fd3ff; --rose: #ff9aa2;
+    --shadow: 4px 4px 0 var(--ink);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font: 15px/1.55 ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+         background-color: var(--paper); background-image: radial-gradient(var(--ink) 0.8px, transparent 0.8px);
+         background-size: 22px 22px; background-blend-mode: soft-light; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; }
+  header { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .logo { width: 46px; height: 46px; display: grid; place-items: center; font-size: 24px; background: var(--lemon);
+          border: 3px solid var(--ink); border-radius: 14px; box-shadow: var(--shadow); transform: rotate(-6deg); }
+  h1 { font: 800 30px/1 Georgia, "Times New Roman", serif; margin: 0; letter-spacing: -.5px; }
+  h1 span { background: linear-gradient(transparent 58%, var(--mint) 58%); padding: 0 4px; }
+  h2 { font: 800 13px/1 ui-rounded, system-ui, sans-serif; text-transform: uppercase; letter-spacing: .12em; margin: 0 0 14px; }
+  .lead { max-width: 820px; margin: 6px 0 24px; }
+  .panel { background: var(--card); border: 3px solid var(--ink); border-radius: 18px; padding: 18px; box-shadow: var(--shadow); margin-top: 24px; }
+  .fence { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 16px; align-items: stretch; }
+  @media (max-width: 860px) { .fence { grid-template-columns: 1fr; } }
+  .col { border: 3px solid var(--ink); border-radius: 16px; padding: 14px; }
+  .col h3 { margin: 0 0 8px; font: 800 17px/1.2 Georgia, serif; }
+  .col.files { background: var(--mint); } .col.net { background: var(--sky); }
+  .agent { background: var(--lemon); border: 3px dashed var(--ink); border-radius: 16px; padding: 14px; text-align: center;
+           display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .agent .box { font-size: 44px; line-height: 1; }
+  ul.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  ul.list li { background: #fff; border: 2px solid var(--ink); border-radius: 10px; padding: 4px 10px; font-weight: 700; }
+  ul.list li.no { background: var(--rose); }
+  code { font: 12.5px ui-monospace, Menlo, monospace; }
+  .chip { display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 10px; border-radius: 99px; border: 2px solid var(--ink);
+          letter-spacing: .05em; text-transform: uppercase; background: #fff; white-space: nowrap; }
+  .chip.allow { background: var(--mint); } .chip.block { background: var(--rose); }
+  .meta { font-size: 13px; color: var(--muted); }
+  .scn { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: start; padding: 14px 0; border-bottom: 3px dotted var(--ink); }
+  .scn:last-of-type { border-bottom: 0; }
+  .num { width: 46px; height: 46px; border: 3px solid var(--ink); border-radius: 50%; display: grid; place-items: center;
+         font: 800 20px Georgia, serif; background: var(--lilac); }
+  .scn h3 { margin: 0 0 4px; font: 800 17px/1.25 Georgia, serif; }
+  .why { margin-top: 6px; font-size: 14px; }
+  pre { margin: 10px 0 0; white-space: pre-wrap; word-break: break-word; font: 12px/1.5 ui-monospace, Menlo, monospace; background: #fff;
+        border: 2px solid var(--ink); border-radius: 12px; padding: 10px; }
+  .note { margin-top: 12px; border: 3px solid var(--ink); border-radius: 14px; background: var(--lemon); padding: 10px 14px; font-weight: 600; }
+  .cmd { background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 8px 12px; margin-top: 8px; display: block; }
+  @media (max-width: 640px) { .scn { grid-template-columns: 46px 1fr; } .scn .chip { grid-column: 2; justify-self: start; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" aria-hidden="true">📦</div>
+    <h1>Sandboxed <span>agent</span></h1>
+  </header>
+  <p class="lead">The same support agent (RAG plus tool calling) runs inside an <a href="https://github.com/NVIDIA/OpenShell">NVIDIA OpenShell</a> sandbox. A short policy file says which files it may read, where it may write and which host it may call. Everything else is denied by default and logged, without changing a line of the agent's code.</p>
+
+  <div class="panel">
+    <h2>The fence, from policy.yaml</h2>
+    <div class="fence">
+      <div class="col files">
+        <h3>Files</h3>
+        <div class="meta" style="color:var(--ink);margin-bottom:8px">Read-only</div>
+        <ul class="list"><li><code>/app</code> the agent's code</li><li><code>/app/chroma_db</code> vector index</li><li><code>/app/orders.db</code> orders table</li><li><code>/usr /lib /lib64 /etc</code></li></ul>
+        <div class="meta" style="color:var(--ink);margin:10px 0 8px">Read and write</div>
+        <ul class="list"><li><code>/tmp</code></li></ul>
+      </div>
+      <div class="agent"><div class="box">🤖</div><b style="font:800 20px Georgia,serif">support agent</b><span class="meta" style="color:var(--ink)">runs as the non-root <code>sandbox</code> user<br>default-deny for everything not listed</span></div>
+      <div class="col net">
+        <h3>Network</h3>
+        <div class="meta" style="color:var(--ink);margin-bottom:8px">Allowed</div>
+        <ul class="list"><li><code>api.groq.com:443</code><br><span class="meta" style="color:var(--ink)">from <code>python3</code> only</span></li></ul>
+        <div class="meta" style="color:var(--ink);margin:10px 0 8px">Denied</div>
+        <ul class="list"><li class="no">every other host</li><li class="no">every other program</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>What <code>demo.sh</code> tries</h2>
+    <div class="scn">
+      <div class="num">1</div>
+      <div><h3>Ask a normal question</h3><code>run_agent.py "where is order A101?"</code>
+        <div class="why">The agent calls its <code>get_order</code> tool, which reads <code>/app/orders.db</code>, then asks Groq for the final answer. Both are inside the policy.</div>
+        <pre>[step 1] get_order({'order_id': 'A101'}) -> order A101: status=processing, item=GPU node - 1x A6000, total=$300.00
+Order A101 is currently processing. It includes a GPU node - 1 x A6000 and the total amount is $300.00.</pre>
+        <div class="meta" style="margin-top:6px">Real agent output (run outside the sandbox).</div></div>
+      <span class="chip allow">allowed</span>
+    </div>
+    <div class="scn">
+      <div class="num">2</div>
+      <div><h3>Read a credential file</h3><code>open('/home/sandbox/.ssh/id_rsa')</code>
+        <div class="why">A decoy key baked into the image. <code>/home/sandbox/.ssh</code> is not in <code>filesystem_policy.read_only</code>, so the filesystem rules (Landlock) refuse the read.</div></div>
+      <span class="chip block">blocked</span>
+    </div>
+    <div class="scn">
+      <div class="num">3</div>
+      <div><h3>Call a host that isn't allowed</h3><code>requests.get("https://example.com")</code>
+        <div class="why">Only <code>api.groq.com</code> is in <code>network_policies</code>. A request to any other host never leaves the sandbox. This is the exfiltration case.</div></div>
+      <span class="chip block">blocked</span>
+    </div>
+    <div class="note">Scenarios 2 and 3 show the outcome the policy specifies. To see OpenShell's own log lines for them, run <code>./demo.sh</code> on a machine with Docker and OpenShell installed. The network rule starts in <code>audit</code> mode, so check the first run's log before switching it to <code>enforce</code>.</div>
+    <code class="cmd">./demo.sh &nbsp;# builds the image, creates the sandbox under policy.yaml, runs the three scenarios</code>
+  </div>
+</div>
+</body>
+</html>
