@@ -4,6 +4,12 @@
 
 This is a demo built on free tiers (Ollama/Groq free inference, OpenShell OSS). It is **not** running on NVIDIA Sentry or BlueField hardware — OpenShell software sandboxing only.
 
+## Overview
+
+[`docs/index.html`](docs/index.html) is a one-page picture of the policy and the three scenarios (open it in a browser, or serve `docs/` with GitHub Pages). Scenario 1 shows real agent output. Scenarios 2 and 3 show the outcome the policy specifies. `./demo.sh` produces OpenShell's own log lines for them.
+
+![The policy as a fence around the agent: files it may read and write, the one host it may call, and the three demo scenarios](docs/screenshots/overview.png)
+
 ## Quickstart (3 commands)
 
 ```bash
